@@ -1,0 +1,16 @@
+"0","zgony2020 <-"
+"0","  readxl::read_excel(""../data/zgony_wedlug_tygodni_v2/Zgony wedˆug tygodni w Polsce_2020.xlsx"","
+"0","                     skip = 6)"
+"2","New names:
+* `` -> ...1
+* `` -> ...2
+* `` -> ...3
+"
+"0","zgony2019 <-"
+"0","  readxl::read_excel(""../data/zgony_wedlug_tygodni_v2/Zgony wedˆug tygodni w Polsce_2019.xlsx"","
+"0","                     skip = 6)"
+"2","New names:
+* `` -> ...1
+* `` -> ...2
+* `` -> ...3
+"
