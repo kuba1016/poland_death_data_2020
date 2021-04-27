@@ -56,7 +56,11 @@ df_r <- map_dfr(df_full,rbind) %>%
 ```
 ```{r}
 df_r %>% 
-  group_by(age_group,week_no,year_date) %>%
-  summarise(total_d =sum(num_deaths))
+  filter(age_group == "80 - 84") %>% 
+  group_by(DATA,year_date,name) %>%
+  summarise(total_d =sum(num_deaths)) %>% 
+  ggplot(aes(DATA,total_d,color = year_date))+
+  geom_line()+
+  facet_wrap(~name)
 ```
 

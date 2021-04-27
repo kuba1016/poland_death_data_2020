@@ -35,3 +35,7 @@ get_data <- function(path) {
 
 df_full <-
   map(list.files("data/zgony_wedlug_tygodni 2/", full.names = T), get_data)
+
+# creating final df and subseting 2015 to 2020 data
+df_r <- map_dfr(df_full,rbind) %>% 
+  filter(year_date %in% c(2015,2016,2017,2018,2019,2020)) 
