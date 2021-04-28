@@ -56,11 +56,81 @@ df_r <- map_dfr(df_full,rbind) %>%
 ```
 ```{r}
 df_r %>% 
-  filter(age_group == "80 - 84") %>% 
+  #filter(age_group == "80 - 84") %>% 
   group_by(DATA,year_date,name) %>%
   summarise(total_d =sum(num_deaths)) %>% 
   ggplot(aes(DATA,total_d,color = year_date))+
   geom_line()+
   facet_wrap(~name)
+```
+```{r}
+df_r %>% 
+  group_by(name,week_no,year_date) %>% 
+  summarise(total_deaths = sum(num_deaths)) %>% 
+  unite(col = "week_year",c(week_no,year_date),sep = "_") %>% 
+  group_by(week_year,name) %>% 
+  summarise(weekly_total = sum(total_deaths)) %>% 
+   separate(week_year,into = c("week","year"),remove = T) %>% 
+  # select(-week,-year) %>% 
+  pivot_wider(names_from = year,values_from = weekly_total) %>% 
+ mutate(diff2020_2019 = (`2020`-`2019`)/`2019`) %>% 
+  ggplot(aes(week,diff2020_2019,group = 1,fill = if_else(diff2020_2019 >0,"green","red")))+
+  geom_col(show.legend = F)+
+  #geom_abline(intercept = 0, slope = 0, color = "red")+
+  scale_y_continuous(labels = scales::label_percent())+
+  scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+  coord_flip()+
+  theme_minimal()+
+  
+  facet_wrap(~name,nrow = 4,scales = "fixed",shrink = F)+
+  labs(
+    x = "Week",
+    y = "% change in deaths registered 2019/2020"
+  )
+  
+ 
+  
+```
+
+```{r}
+
+df_r %>%
+  group_by(name, week_no, year_date) %>%
+  summarise(total_deaths = sum(num_deaths)) %>%
+  unite(col = "week_year", c(week_no, year_date), sep = "_") %>%
+  group_by(week_year, name) %>%
+  summarise(weekly_total = sum(total_deaths)) %>%
+  separate(week_year, into = c("week", "year"), remove = T) %>%
+  pivot_wider(names_from = year, values_from = weekly_total) %>%
+  mutate(diff2020_2019 = (`2020` - `2019`) / `2019`) %>%
+  filter(name == "Lubelskie") %>%
+  ggplot(aes(week, diff2020_2019, group = 1, fill = if_else(diff2020_2019 > 0, "green", "red"))) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = paste0(round(diff2020_2019, 3) * 100, "%"))) +
+  scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  #coord_flip() +
+  theme_minimal()
+ 
+```
+```{r}
+df_r %>%
+  group_by(name, week_no, year_date) %>%
+  summarise(total_deaths = sum(num_deaths)) %>%
+  unite(col = "week_year", c(week_no, year_date), sep = "_") %>%
+  group_by(week_year, name) %>%
+  summarise(weekly_total = sum(total_deaths)) %>%
+  separate(week_year, into = c("week", "year"), remove = T) %>%
+  pivot_wider(names_from = year, values_from = weekly_total) %>%
+  mutate(diff2020_2019 = (`2020` - `2019`) / `2019`) %>% 
+  group_by(week) %>% 
+  summarise(mean_poland=mean(diff2020_2019)) %>% 
+  ggplot(aes(week, mean_poland, group = 1, fill = if_else(mean_poland > 0, "green", "red"))) +
+  geom_col(show.legend = F) +
+  geom_text(aes(label = paste0(round(mean_poland, 3) * 100, "%"), hjust = -.2)) +
+  scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  coord_flip() +
+  theme_minimal()
 ```
 
