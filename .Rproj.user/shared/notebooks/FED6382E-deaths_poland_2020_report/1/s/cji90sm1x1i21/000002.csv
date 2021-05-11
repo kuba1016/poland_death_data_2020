@@ -1,3 +1,0 @@
-"0","poland10 <-"
-"0","  ms_simplify(poland, keep = 0.10, keep_shapes = T) %>% select(name, geometry)"
-"0",""

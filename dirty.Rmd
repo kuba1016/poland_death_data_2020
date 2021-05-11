@@ -61,6 +61,7 @@ df_r %>%
   summarise(total_d =sum(num_deaths)) %>% 
   ggplot(aes(DATA,total_d,color = year_date))+
   geom_line()+
+  theme_minimal()+
   facet_wrap(~name)
 ```
 ```{r}
@@ -94,7 +95,7 @@ df_r %>%
 
 ```{r}
 
-df_r %>%
+p <- df_r %>%
   group_by(name, week_no, year_date) %>%
   summarise(total_deaths = sum(num_deaths)) %>%
   unite(col = "week_year", c(week_no, year_date), sep = "_") %>%
@@ -132,5 +133,209 @@ df_r %>%
   scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
   coord_flip() +
   theme_minimal()
+```
+
+```{r}
+#maps 
+
+library(sf)
+
+
+```
+
+```{r}
+geom_data <- read_sf("data/Wojewodztwa/Wojewądztwa.shp") %>% 
+  filter(admin=="Poland") %>% 
+  select(name_pl,geometry) %>% 
+  rename("name"="name_pl") %>% 
+  #mutate(name =str_remove(name,"-")) %>%
+    mutate(name =str_remove(name,"województwo"))
+#st_crs(geom_data) <- 4326
+```
+
+
+```{r}
+map_data <- df_r %>%
+  mutate(name = str_to_lower(name)) %>% 
+  group_by(name,week_no,year_date) %>% 
+  summarise(total_deaths = sum(num_deaths)) %>% 
+ unite(col = "week_year",c(week_no,year_date),sep = "_") %>% 
+  group_by(week_year,name) %>% 
+  summarise(weekly_total = sum(total_deaths)) %>% 
+   separate(week_year,into = c("week","year"),remove = T) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = year,values_from = weekly_total) %>% 
+  select(week,name,`2020`) %>% 
+  rename("year_2020" =`2020`) %>% 
+  filter(name !="warszawski stołeczny") %>% 
+  mutate(name = replace(name,name =="mazowiecki regionalny","mazowieckie")) %>% 
+  left_join(geom_data,by=c("name"="name"))
+```
+```{r}
+df_r %>% 
+  filter(year_date==2020,
+         name != "Warszawski stołeczny") %>% 
+  mutate(name= str_to_lower(name)) %>% 
+  mutate(name=replace(name,name=="mazowiecki regionalny","mazowieckie")) %>% 
+  #left_join(geom_data) %>% 
+  group_by(name) %>% 
+  summarise(total  = sum(num_deaths)) %>%
+  rename("name_o" = "name") %>% 
+  left_join(geom_data,by = c("name_o"="name")) %>% 
+  ggplot()+
+  geom_sf(aes(geometry=geometry))
+  
+```
+```{r}
+map_data %>% group_by(name) %>% 
+  summarise(total = sum(year_2020)) %>% left_join(geom_data) %>% 
+  ggplot()+
+  geom_sf(aes(geometry = geometry))
+```
+
+```{r}
+geom_data %>% cbind()
+map_data %>% 
+
+  ggplot()+
+  geom_sf()+
+  aes(fill = name, geometry = geometry)
+```
+
+```{r}
+me_diff <- df_r %>%
+  group_by(name, week_no, year_date) %>%
+  summarise(total_deaths = sum(num_deaths)) %>%
+  unite(col = "week_year", c(week_no, year_date), sep = "_") %>%
+  group_by(week_year, name) %>%
+  summarise(weekly_total = sum(total_deaths)) %>%
+  separate(week_year, into = c("week", "year"), remove = T) %>%
+  pivot_wider(names_from = year, values_from = weekly_total) %>%
+  mutate(diff2020_2019 = (`2020` - `2019`) / `2019`) %>% 
+  group_by(week) %>% 
+  summarise(mean_poland=mean(diff2020_2019))
+```
+```{r}
+me_diff %>% plot_ly(x=~week,y = ~mean_poland,type = "scatter",mode="lines",line=list("red"))
+```
+
+```{r}
+p <- df_r %>%
+  group_by(name, week_no, year_date) %>%
+  summarise(total_deaths = sum(num_deaths)) %>%
+  unite(col = "week_year", c(week_no, year_date), sep = "_") %>%
+  group_by(week_year, name) %>%
+  summarise(weekly_total = sum(total_deaths)) %>%
+  separate(week_year, into = c("week", "year"), remove = T) %>%
+  pivot_wider(names_from = year, values_from = weekly_total) %>%
+  mutate(diff2020_2019 = round((`2020` - `2019`) / `2019`,3)*100) %>%
+  filter(name == "Lubelskie") %>%
+  ggplot(aes(week, diff2020_2019, group = 1, fill = if_else(diff2020_2019 > 0, "green", "red"))) +
+  geom_col(show.legend = F,aes(text = paste("Wojewodztwo: ",name,"\n","Zmiana: ", diff2020_2019,"%"))) +
+  #geom_text(aes(label = paste0(round(diff2020_2019, 3) * 100, "%"))) +
+  scale_y_continuous(labels = scales::label_percent()) +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) +
+  #coord_flip() +
+  theme_minimal()
+```
+
+```{r}
+ggplotly(p,tooltip = "text")
+```
+```{r}
+df_r %>% 
+  group_by(age_group,year_date) %>% 
+  summarise(total_num_deaths_week = sum(num_deaths)) %>% 
+  mutate(age_group = fct_reorder(age_group,total_num_deaths_week)) %>% 
+  plot_ly(x= ~year_date, y = ~total_num_deaths_week, color = ~age_group, type = "bar" )
+```
+
+```{r}
+library(leaflet)
+library(rgdal)
+library(sf)
+library(plotly)
+library(viridis)
+library(ggthemes)
+
+
+```
+
+
+```{r}
+shape_voiv <- readOGR("data/Wojewodztwa/Wojewądztwa.shp")
+shape_voiv_sf <- read_sf("data/Wojewodztwa/Wojewądztwa.shp")
+
+```
+
+```{r}
+df_map <- df_r %>%
+  mutate(name = str_to_lower(name)) %>% 
+  group_by(name,week_no,year_date) %>% 
+  summarise(total_deaths = sum(num_deaths)) %>% 
+ unite(col = "week_year",c(week_no,year_date),sep = "_") %>% 
+  group_by(week_year,name) %>% 
+  summarise(weekly_total = sum(total_deaths)) %>% 
+   separate(week_year,into = c("week","year"),remove = T) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = year,values_from = weekly_total) %>% 
+  select(week,name,`2020`) %>% 
+  rename("total" =`2020`) %>% 
+ filter( !(name %in% c("mazowiecki regionalny","warszawski stołeczny"))) %>%
+  rbind(mazowieckie %>% select(week,name,total)) %>% 
+  group_by(name) %>% 
+  summarise(total_deaths_2020 = sum(total)) 
+ 
+```
+
+```{r}
+# bins <- c(100,200,300,400,500,1000)
+# pal <- colorBin("RdYlBu",domain = df_map$name,bins =bins)
+# m <- leaflet() %>% 
+#   addProviderTiles(providers$Stamen.Toner) %>% 
+#   setView(19,52,zoom =6) %>% 
+#   addPolygons(data = shape_voiv,
+#               weight = 1,
+#               color = "#660000",
+#               smoothFactor = .5,
+#               fillColor = pal(df_map$total_deaths_2020)) 
+#   
+# m
+```
+```{r}
+map_gg <- df_map %>% left_join(shape_voiv_sf,by = c("name"="JPT_NAZWA_")) %>% 
+  select(name,total_deaths_2020,geometry) %>% 
+                       ggplot()+
+  aes(geometry=geometry,text = paste0("Total deaths: ", total_deaths_2020))+
+  geom_sf(aes(fill =total_deaths_2020),color ="white",)+
+  coord_sf()+
+  theme_map()+
+  scale_fill_viridis(trans = "log",direction = -1,option = "magma")+
+  labs(
+    title = "Number of deaths 2020 by voivodeship",
+    fill = "Number of deaths 2020"
+  )
+```
+```{r}
+ggplotly(map_gg,tooltip = "text")
+```
+
+```{r}
+ mazowieckie <- df_r %>%
+  mutate(name = str_to_lower(name)) %>% 
+  group_by(name,week_no,year_date) %>% 
+  summarise(total_deaths = sum(num_deaths)) %>% 
+ unite(col = "week_year",c(week_no,year_date),sep = "_") %>% 
+  group_by(week_year,name) %>% 
+  summarise(weekly_total = sum(total_deaths)) %>% 
+   separate(week_year,into = c("week","year"),remove = T) %>% 
+  ungroup() %>% 
+  pivot_wider(names_from = year,values_from = weekly_total) %>% 
+  select(week,name,`2020`) %>% 
+  rename("year_2020" =`2020`) %>% 
+  filter( name %in% c("mazowiecki regionalny","warszawski stołeczny")) %>% 
+ group_by(week) %>% 
+   summarise(total = sum(year_2020)) %>% 
+  mutate(name = "mazowieckie")
 ```
 

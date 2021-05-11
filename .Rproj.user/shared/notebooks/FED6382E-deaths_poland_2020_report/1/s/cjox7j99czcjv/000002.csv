@@ -1,7 +1,0 @@
-"0","zgony_19_20 <-"
-"0","  zgony2020 %>%"
-"0","  data_cleaning_age() %>%"
-"0","  mutate(year = ""y2020"") %>%"
-"0","  bind_rows(zgony2019 %>%"
-"0","              data_cleaning_age() %>%"
-"0","              mutate(year = ""y2019""))"
