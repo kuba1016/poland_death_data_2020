@@ -3,10 +3,14 @@ server <- function(input, output) {
   # interactivity for the death number difrences
 
   plot_diff_df <- reactive({
-    diff_df %>%
-      filter(name == input$voiv)
+    if (input$voiv %in% "All") {
+      diff_df
+    } else {
+      diff_df %>%
+        filter(name == input$voiv)
+    }
   })
-
+  # diff in deaths 2019/2020
   output$plot1 <- renderPlot({
     plot_diff_df() %>%
       ggplot(aes(week, diff2020_2019, group = 1, fill = if_else(diff2020_2019 > 0, "green", "red"))) +
@@ -22,4 +26,6 @@ server <- function(input, output) {
         y = "% change in deaths registered 2019/2020"
       )
   })
+
+  # interactivity for deaths by age
 }

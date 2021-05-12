@@ -2,6 +2,7 @@
 # Loading lib 
 library(tidyverse)
 library(readxl)
+library(ggrepel)
 
 ```
 
@@ -337,5 +338,19 @@ ggplotly(map_gg,tooltip = "text")
  group_by(week) %>% 
    summarise(total = sum(year_2020)) %>% 
   mutate(name = "mazowieckie")
+```
+```{r}
+base_df %>% 
+  group_by(age_group,year_date) %>% 
+  summarise(num_deaths = sum(num_deaths)) %>%
+  mutate(age_help = parse_number(age_group)) %>% 
+  arrange(age_help) %>% 
+  
+  ggplot(aes(year_date,num_deaths, color = fct_reorder(age_group,age_help, min)))+
+  #geom_point()+
+  geom_line()+
+  geom_text(aes(label = num_deaths),nudge_x = .3,check_overlap = F)+
+  theme_minimal()
+  
 ```
 
