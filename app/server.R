@@ -32,7 +32,7 @@ server <- function(input, output) {
     if (input$age %in% "All") {
       age_df
     } else {
-      age_df %>% filter(age_group == input$age)
+      age_df %>% filter(age_group %in% input$age)
     }
   })
 

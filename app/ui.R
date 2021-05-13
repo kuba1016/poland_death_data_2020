@@ -27,7 +27,11 @@ body <- dashboardBody(
           width = 10,
           title = "age_group"
         ),
-        box(selectInput("age", "age", choices = c("All", unique(base_df$age_group))))
+        box(checkboxGroupInput("age",
+          "age",
+          choices = c("All", unique(base_df$age_group)),
+          selected = "All"
+        ), width = 2)
       )
     ),
     tabItem(
@@ -38,8 +42,9 @@ body <- dashboardBody(
           title = "Week by week % change in deaths registered 2019/2020",
           solidHeader = TRUE
         ),
-        box(selectInput("voiv", "voivodeship",
+        box(checkboxGroupInput("voiv", "voivodeship",
           choices = c("All", unique(diff_df$name)),
+          selected = "All"
         ),
         width = 2
         )
