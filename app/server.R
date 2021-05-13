@@ -10,7 +10,7 @@ server <- function(input, output) {
         filter(name == input$voiv)
     }
   })
-  # diff in deaths 2019/2020
+  # diff in deaths 2019/2020 plot
   output$plot1 <- renderPlot({
     plot_diff_df() %>%
       ggplot(aes(week, diff2020_2019, group = 1, fill = if_else(diff2020_2019 > 0, "green", "red"))) +
@@ -28,4 +28,25 @@ server <- function(input, output) {
   })
 
   # interactivity for deaths by age
+  plot_age_df <- reactive({
+    if (input$age %in% "All") {
+      age_df
+    } else {
+      age_df %>% filter(age_group == input$age)
+    }
+  })
+
+  # age  plot
+
+  output$plot_age <- renderPlot(
+    {
+      plot_age_df() %>%
+        ggplot(aes(year_date, num_deaths, color = age_group)) +
+        # geom_point()+
+        geom_line() +
+        geom_text(aes(label = num_deaths), nudge_x = .3, check_overlap = F) +
+        theme_minimal()
+    },
+    res = 96
+  )
 }

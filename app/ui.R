@@ -19,18 +19,15 @@ sidebar <- dashboardSidebar(
 body <- dashboardBody(
   ## tab Items##
   tabItems(
-    ###tab age_group
+    ### tab age_group
     tabItem(
       tabName = "age_group",
       fluidRow(
-        box(plotOutput("age_group_plot", height = 600),
-            width = 10,
-            title = "age_group"),
-        box(pickerInput("age","age",
-                        choices = c("bla","nla"),
-                        options = list(
-                          `actions-box` = TRUE),
-                        multiple = TRUE))
+        box(plotOutput("plot_age", height = 600),
+          width = 10,
+          title = "age_group"
+        ),
+        box(selectInput("age", "age", choices = c("All", unique(base_df$age_group))))
       )
     ),
     tabItem(
@@ -41,12 +38,11 @@ body <- dashboardBody(
           title = "Week by week % change in deaths registered 2019/2020",
           solidHeader = TRUE
         ),
-        box(selectInput("voiv", "voivodeship", 
-                        choices = c("All",unique(diff_df$name)),
-                        
-                        
-                        ),
-            width = 2)
+        box(selectInput("voiv", "voivodeship",
+          choices = c("All", unique(diff_df$name)),
+        ),
+        width = 2
+        )
       )
     ),
     tabItem(
