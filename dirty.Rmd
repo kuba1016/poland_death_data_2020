@@ -354,6 +354,90 @@ base_df %>%
   
 ```
 ```{r}
-voivNames()
+# deaths_time <- base_df %>%
+#   mutate(year_month = format(DATA, "%Y-%m")) %>%
+#   group_by(year_month) %>%
+#   summarise(total_deaths_months = sum(num_deaths))
+deaths_time <- base_df %>%
+  mutate(year_month = format(DATA, "%Y-%m")) %>% 
+  group_by(year_month) %>%
+  summarise(total_deaths_months = sum(num_deaths)) %>% 
+  mutate(year_month = yearmonth(year_month)) %>% 
+  as_tsibble(index =year_month )
+
+  
+```
+
+```{r}
+ggplot(deaths_time, aes(year_month, total_deaths_months,group = 1))+
+  geom_line()
+```
+```{r}
+library(tsibble)
+
+```
+```{r}
+#creating a tsibble
+deaths_time <- base_df %>%
+  mutate(year_month = format(DATA, "%Y-%m")) %>% 
+  group_by(year_month) %>%
+  summarise(total_deaths_months = sum(num_deaths)) %>% 
+  mutate(year_month = yearmonth(year_month)) %>% 
+  as_tsibble(index =year_month )
+```
+```{r}
+ggplot(deaths_ts, aes(month, total_deaths,group = 1))+
+  geom_line()
+```
+```{r}
+# creating moving avarage. 
+deaths_rolling <- deaths_ts %>% 
+  group_by_key() %>% 
+  mutate(death_mean = slider::slide_dbl(total_deaths, mean,before = 2, .step = 3))
+
+ggplot(deaths_rolling) + 
+  geom_line(aes(x = month, y = total_deaths), colour = "grey") + 
+    geom_line(aes(x = month, y = death_mean), colour = "red")
+```
+#feature extraction
+```{r}
+library(feasts)
+library(forecast)
+library(fable)
+library(fabletools)
+library(fpp3)
+```
+```{r}
+deaths_time %>% 
+ model(STL(total_deaths_months ~ season(window = "periodic"))) %>% 
+   components() %>% 
+   autoplot()
+
+```
+```{r}
+
+```
+
+```{r}
+fit <- deaths_time %>%
+  filter_index(~ "2019 Dec") %>% 
+  model(
+    snaive = SNAIVE(total_deaths_months),
+    mean_model = MEAN(total_deaths_months),
+    arima = ARIMA(total_deaths_months)
+  )
+fit
+```
+```{r}
+forecast_1 <- fit %>%
+  fabletools::forecast(h = 12)
+forecast_1
+```
+```{r}
+forecast_1 %>%
+  autoplot(deaths_time) +
+   
+  
+  guides(colour = guide_legend(title = "Forecast"))
 ```
 
